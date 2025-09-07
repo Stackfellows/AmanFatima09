@@ -2,40 +2,37 @@ import jwt from "jsonwebtoken";
 
 const auth = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization; // standard way
+    const authHeader = req.header("Authorization");
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res
-        .status(401)
-        .json({ msg: "Authorization header missing or invalid" });
+    if (!authHeader) {
+      return res.status(401).json({ msg: "No Authorization header provided" });
     }
 
-    const token = authHeader.split(" ")[1]; // safer way to extract token
+    if (!authHeader.startsWith("Bearer ")) {
+      return res
+        .status(401)
+        .json({ msg: "Authorization format must be Bearer <token>" });
+    }
+
+    const token = authHeader.replace("Bearer ", "").trim();
 
     if (!token) {
       return res.status(401).json({ msg: "No token, authorization denied" });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (!decoded) {
-      return res.status(401).json({ msg: "Token verification failed" });
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      res.status(401).json({ msg: "Please login first" });
+      return;
     }
 
-    // Attach user info to request
-    req.user = {
-      id: decoded.id,
-      role: decoded.role,
-      email: decoded.email,
-    };
+    req.user = { id: decoded.id, role: decoded.role, email: decoded.email };
 
     next();
   } catch (error) {
-    console.error("Auth Middleware Error:", error.message);
-    return res
-      .status(401)
-      .json({ msg: "Invalid or expired token, please login again" });
+    return res.status(500).json({ msg: "Server error in auth middleware" });
   }
 };
 

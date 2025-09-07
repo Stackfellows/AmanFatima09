@@ -22,9 +22,10 @@ router.post("/reset-password/:resetPasswordToken", resetPassword);
 router.post("/verify-otp", verifyOtp);
 router.post("/resend-otp", resendOtp);
 
-// ✅ Secure this route
-router.get("/", auth, getAllUsers);
+// 🔹 Get all users (protected)
+router.get("/all", auth, getAllUsers);
 
+// 🔹 Delete user (protected)
 router.delete("/:id", auth, deleteUser);
 
 export default router;

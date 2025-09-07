@@ -22,10 +22,10 @@ const __dirname = path.dirname(__filename);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.json());
+
 // Enhanced CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
 
     const allowedOrigins = [
@@ -55,16 +55,20 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Handle preflight requests
-// app.options("/*", cors(corsOptions));
+// 🔹 Root route safe response
+app.get("/", (req, res) => {
+  res.send("🚀 Backend is running successfully!");
+});
 
-app.use("/", userRouter);
+// Routers
+app.use("/users", userRouter);
 app.use("/contact", contactRouter);
 app.use("/feedback", feedbackRouter);
 app.use("/trip", tripRouter);
 app.use("/orders", orderRouter);
 app.use("/send-order", newSendRouter);
 app.use("/payments", paymentRouter);
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -75,7 +79,9 @@ const transporter = nodemailer.createTransport({
 
 transporter.verify((error) => {
   if (error) {
+    console.error("Email transporter error:", error);
   } else {
+    console.log("Email transporter ready");
   }
 });
 
